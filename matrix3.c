@@ -8,9 +8,12 @@
 
 #define MATRIX_SIZE 4000
 int thread_num;
+unsigned long long int * s;
+
 unsigned long long int sum = 0;
 int mat1[MATRIX_SIZE][MATRIX_SIZE], mat2[MATRIX_SIZE][MATRIX_SIZE];
 unsigned long long int result[MATRIX_SIZE][MATRIX_SIZE];
+pthread_mutex_t mutex;
 
 void matrix_mul();
 void matrix_print(int mat[MATRIX_SIZE][MATRIX_SIZE]);
@@ -19,8 +22,11 @@ void * mul_th(void * arg);
 
 int main() {
 	int choose, i, j;
+
 	FILE * matrix1 = fopen("./sample1.txt", "r");
 	FILE * matrix2 = fopen("./sample2.txt", "r");
+    
+    pthread_mutex_init(&mutex, NULL);
 
 	/*
 	srand(time(NULL));
@@ -68,14 +74,20 @@ int main() {
 			result[i][j] = 0;
 		}
 	}
+    
+    
 
 	//matrix_mul(mat1, mat2, result);
 	//matrix_print(result);
 
 	thread_num = 20;
+    
+    s = (unsigned long long int *) malloc(sizeof(unsigned long long int) * thread_num);
+
 
 	thread_execution(mat1, mat2, result);
 
+    free(s);
 	fclose(matrix1);
 	fclose(matrix2);
 
@@ -110,12 +122,12 @@ void * mul_th(void * arg) {
 	const unsigned long long int n_operations = n_elements / thread_num;
 	const unsigned long long int rest_operations = n_elements % thread_num;	
 	unsigned long long int i, j, k;
-    unsigned long long int r = 0;
     int row, col;
-
 
 	int thread_n = *(int*)arg;
 	unsigned long long int start_op, end_op;
+    unsigned long long int r = 0;
+
 
 	  if (thread_n == 0) {
 	    // First thread does more job
@@ -127,7 +139,7 @@ void * mul_th(void * arg) {
 	    end_op = (n_operations * (thread_n + 1)) + rest_operations;
 	  }
 	  printf("Start thread %d\n", thread_n);
-
+    
 	    for (int op = start_op; op < end_op; ++op) {
             row = op % MATRIX_SIZE;
             col = op / MATRIX_SIZE;
@@ -137,9 +149,12 @@ void * mul_th(void * arg) {
                 int e2 = mat2[i][col];
                 r += e1 * e2;
             }
-
+        
         result[row][col] = r;
+        s[thread_n] += r;
+
   }
+    
     printf("End thread %d\n", thread_n);
 
 }
@@ -149,7 +164,8 @@ void thread_execution() {
 	float operating_time;
 	pthread_t thread[thread_num];
 	int id[thread_num];
-    int row, col;
+    
+    for (int i =0; i<thread_num; i++) s[i]=0;
 
     gettimeofday(&start, NULL);
 
@@ -162,14 +178,14 @@ void thread_execution() {
     	pthread_join(thread[i], NULL);
  	}
     
-    for (int i = 0; i < MATRIX_SIZE; i++) {
-        for (int j = 0; j < MATRIX_SIZE; j++)
-            sum += result[i][j];
-    }
+    sum = 0;
+    for (int i = 0; i <thread_num; i++) sum += s[i];
     
     printf("sum : %lld\n", sum);
     
 	gettimeofday(&end, NULL);
 	operating_time = (double)(end.tv_sec)+(double)(end.tv_usec)/1000000.0-(double)(start.tv_sec)-(double)(start.tv_usec)/1000000.0;
 	printf("%f\n",operating_time);
+    
+
 }
