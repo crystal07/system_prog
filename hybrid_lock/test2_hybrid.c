@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <unistd.h>
+#include <sys/time.h>
 #include "hybrid_lock.h"
 
 long g_count = 0;
