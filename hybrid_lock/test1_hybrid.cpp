@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <chrono>
 #include <sys/time.h>
 #include "hybrid_lock.h"
 
@@ -13,56 +14,40 @@ long long int while_count;
 
 long long int get_count_while_per_sec() {
 	long long int i = 0;
-	struct timeval start, current;
-	float operating_time = 0;
-	pthread_spinlock_t spin;
-	int is_spin; 
-	int result;
+	std::mutex mtx_lock;
 
-	pthread_spin_init(&spin, PTHREAD_PROCESS_PRIVATE);
+	bool result = false;      
 
-	gettimeofday(&start, NULL);
-	while (operating_time < (float)1) {
-		i++;
-		//printf("i %d, operating_time %f\n", i, operating_time);
-		if (!(result = pthread_spin_trylock(&spin))) {
-			is_spin = 1;
-			//continue;
-		}
-		gettimeofday(&current, NULL);
-		operating_time = (double)(current.tv_sec)+(double)(current.tv_usec)/1000000.0-(double)(start.tv_sec)-(double)(start.tv_usec)/1000000.0;
-	}
-	pthread_spin_destroy(&spin);
+    auto start = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
+    while (!result && ((end - start).count() < 1000000000)) {
+        end = std::chrono::high_resolution_clock::now();
+        result = mtx_lock.try_lock();
+        i++;
+    }
+	
 	return i;
 }
 
 void *thread_func(void *arg)
 {
-	long i, j, k, count = (long)arg;
-	long long l;
-
-	//while_count = get_count_while_per_sec();
+	long i, count = (long)arg;
 
 	/*
 	 * Increase the global variable, g_count.
 	 * This code should be protected by
-	 * some locks, e.g. spin lock, and the lock that
+	 * some locks, e.g. spin lock, and the lock that 
 	 * you implemented for assignment,
 	 * because g_count is shared by other threads.
 	 */
+	//pthread_mutex_lock(&g_mutex);
 	for (i = 0; i<count; i++) {
-		hybrid_lock_lock(&hybrid);
-		/********************** Critical Section **********************/
-
-		/*
-		 * The purpose of this code is to occupy cpu for long time.
-		 */
-		for (j = 0; j<100000; j++)
-			for (k = 0; k<3000; k++)
-				l += j * k;
-
+		hybrid_lock_lock(&hybrid, while_count);
+		//pthread_mutex_unlock(&g_mutex);
+		//printf("%d thead : %d count\n", pthread_self(), g_count);
+		/************ Critical Section ************/
 		g_count++;
-		/**************************************************************/
+		/******************************************/
 		hybrid_lock_unlock(&hybrid);
 	}
 }
@@ -70,8 +55,12 @@ void *thread_func(void *arg)
 int main(int argc, char *argv[])
 {
 	pthread_t *tid;
-	long i, thread_count, value;
+	long i, thread_count, value, v;
 	int rc;
+	//while_time = get_while_time();
+	while_count = get_count_while_per_sec();
+	//printf("cout %d\n", count);
+	//scanf("%ld", &v);
 
 	/*
 	 * Check that the program has three arguments
@@ -80,11 +69,6 @@ int main(int argc, char *argv[])
 	if (3 != argc) {
 		fprintf(stderr, "usage: %s <thread count> <value>\n", argv[0]);
 		exit(0);
-	}
-
-	if (pthread_mutex_init(&g_mutex, NULL) != 0) {
-		fprintf(stderr, "g_mutex init error\n");
-		exit(-1);
 	}
 
 	if (pthread_mutex_init(&g_mutex, NULL) != 0) {
@@ -153,7 +137,7 @@ int main(int argc, char *argv[])
 	/*
 	 * Print the value of g_count.
 	 * It must be (thread_count * value)
-	 */
+	 */ 
 	printf("value: %ld\n", g_count);
 
 	free(tid);

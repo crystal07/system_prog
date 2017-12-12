@@ -12,4 +12,5 @@ typedef struct hybrid_lock {
 int hybrid_lock_init(hybrid_lock_t *lock);
 int hybrid_lock_destroy(hybrid_lock_t *lock);
 int hybrid_lock_lock(hybrid_lock_t *lock);
+int hybrid_lock_lock(hybrid_lock_t *lock, long long int c);
 int hybrid_lock_unlock(hybrid_lock_t *lock);
