@@ -21,7 +21,7 @@ long long int get_count_while_per_sec() {
 
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
-    while (!result && ((end - start).count() < 1000000000)) {
+    while (((end - start).count() < 1000000000)) {
         end = std::chrono::high_resolution_clock::now();
         result = mtx_lock.try_lock();
         i++;
@@ -43,7 +43,7 @@ void *thread_func(void *arg)
 	 * because g_count is shared by other threads.
 	 */
 	for (i = 0; i<count; i++) {
-		hybrid_lock_lock(&hybrid);
+		hybrid_lock_lock(&hybrid, while_count);
 		/********************** Critical Section **********************/
 
 		/*
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 	long i, thread_count, value;
 	int rc;
 
-	//while_count = get_count_while_per_sec();
+	while_count = get_count_while_per_sec();
 
 	/*
 	 * Check that the program has three arguments

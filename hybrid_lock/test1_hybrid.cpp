@@ -20,7 +20,7 @@ long long int get_count_while_per_sec() {
 
     auto start = std::chrono::high_resolution_clock::now();
     auto end = std::chrono::high_resolution_clock::now();
-    while (!result && ((end - start).count() < 1000000000)) {
+    while (((end - start).count() < 1000000000)) {
         end = std::chrono::high_resolution_clock::now();
         result = mtx_lock.try_lock();
         i++;
