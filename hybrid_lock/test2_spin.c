@@ -3,6 +3,8 @@
 #include <pthread.h>
 
 long g_count = 0;
+pthread_spinlock_t spin;
+pthread_mutex_t g_mutex;
 
 void *thread_func(void *arg)
 {
@@ -16,8 +18,10 @@ void *thread_func(void *arg)
 	 * you implemented for assignment,
 	 * because g_count is shared by other threads.
 	 */
+	pthread_mutex_lock(&g_mutex);
 	for (i = 0; i<count; i++) {
-
+		pthread_spin_lock(&spin);
+		pthread_mutex_unlock(&g_mutex);
 		/********************** Critical Section **********************/
 
 		/*
@@ -29,6 +33,7 @@ void *thread_func(void *arg)
 
 		g_count++;
 		/**************************************************************/
+		pthread_spin_unlock(&spin);
 	}
 }
 
@@ -57,6 +62,16 @@ int main(int argc, char *argv[])
 	thread_count = atol(argv[1]);
 	value = atol(argv[2]);
 
+	if (pthread_mutex_init(&g_mutex, NULL) != 0) {
+		fprintf(stderr, "g_mutex init error\n");
+		exit(-1);
+	}
+
+	if (pthread_spin_init(&spin, PTHREAD_PROCESS_PRIVATE) != 0) {
+		fprintf(stderr, "spin init error");
+		exit(-1);
+	}
+
 	/*
 	 * Create array to get tids of each threads that will
 	 * be created by this thread.
@@ -77,6 +92,7 @@ int main(int argc, char *argv[])
 		if (rc) {
 			fprintf(stderr, "pthread_create() error\n");
 			free(tid);
+			pthread_spin_destroy(&spin);
 			pthread_mutex_destroy(&g_mutex);
 			exit(0);
 		}
@@ -90,10 +106,14 @@ int main(int argc, char *argv[])
 		if (rc) {
 			fprintf(stderr, "pthread_join() error\n");
 			free(tid);
+			pthread_spin_destroy(&spin);
 			pthread_mutex_destroy(&g_mutex);
 			exit(0);
 		}
 	}
+
+	pthread_spin_destroy(&spin);
+	pthread_mutex_destroy(&g_mutex);
 
 	/*
 	 * Print the value of g_count.

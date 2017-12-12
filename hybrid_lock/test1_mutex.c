@@ -34,14 +34,6 @@ int main(int argc, char *argv[])
 	long i, thread_count, value;
 	int rc;
 
-	if (pthread_mutex_init(&g_mutex, NULL) != 0) {
-		fprintf(stderr, "g_mutex init error\n");
-	}
-
-	if (pthread_mutex_init(&mutex, NULL) != 0) {
-		fprintf(stderr, "mutex init error\n");
-	}
-
 	/*
 	 * Check that the program has three arguments
 	 * If the number of arguments is not 3, terminate the process.
@@ -60,6 +52,14 @@ int main(int argc, char *argv[])
 	 */
 	thread_count = atol(argv[1]);
 	value = atol(argv[2]);
+
+	if (pthread_mutex_init(&g_mutex, NULL) != 0) {
+		fprintf(stderr, "g_mutex init error\n");
+	}
+
+	if (pthread_mutex_init(&mutex, NULL) != 0) {
+		fprintf(stderr, "mutex init error\n");
+	}
 
 	/*
 	 * Create array to get tids of each threads that will
