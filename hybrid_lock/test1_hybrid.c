@@ -72,9 +72,9 @@ void *thread_func(void *arg)
 	 */
 	//pthread_mutex_lock(&g_mutex);
 	for (i = 0; i<count; i++) {
-		hybrid_lock_lock(&hybrid, while_count);
+		hybrid_lock_lock(&hybrid);
 		//pthread_mutex_unlock(&g_mutex);
-		printf("%d thead : %d count\n", pthread_self(), g_count);
+		//printf("%d thead : %d count\n", pthread_self(), g_count);
 		/************ Critical Section ************/
 		g_count++;
 		/******************************************/
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
 	long i, thread_count, value, v;
 	int rc;
 	//while_time = get_while_time();
-	while_count = get_count_while_per_sec();
+	//while_count = get_count_while_per_sec();
 	//printf("cout %d\n", count);
 	//scanf("%ld", &v);
 

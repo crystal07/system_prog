@@ -11,17 +11,18 @@ int hybrid_lock_destroy(hybrid_lock* lock)
    return 0;
 }
 
-int hybrid_lock_lock(hybrid_lock* lock, long long int count)
+int hybrid_lock_lock(hybrid_lock* lock)
 {
    if (lock->lock_count > 2)
       lock->mtx_lock.lock();
    else
    {
       bool result = false;      
-      int count = 0;
 
-      while ((!result) && (count < 728700000)) {
-         ++count;
+      auto start = std::chrono::high_resolution_clock::now();
+      auto end = std::chrono::high_resolution_clock::now();
+      while (!result && ((end - start).count() < 1000000000)) {
+         end = std::chrono::high_resolution_clock::now();
          result = lock->mtx_lock.try_lock();
       }
 

@@ -41,7 +41,7 @@ void *thread_func(void *arg)
 	long i, j, k, count = (long)arg;
 	long long l;
 
-	while_count = get_count_while_per_sec();
+	//while_count = get_count_while_per_sec();
 
 	/*
 	 * Increase the global variable, g_count.
@@ -51,7 +51,7 @@ void *thread_func(void *arg)
 	 * because g_count is shared by other threads.
 	 */
 	for (i = 0; i<count; i++) {
-		hybrid_lock_lock(&hybrid, while_count);
+		hybrid_lock_lock(&hybrid);
 		/********************** Critical Section **********************/
 
 		/*

@@ -18,10 +18,10 @@ void *thread_func(void *arg)
 	 * you implemented for assignment,
 	 * because g_count is shared by other threads.
 	 */
-	pthread_mutex_lock(&g_mutex);
+	//pthread_mutex_lock(&g_mutex);
 	for (i = 0; i<count; i++) {
 		pthread_spin_lock(&spin);
-		pthread_mutex_unlock(&g_mutex);
+		//pthread_mutex_unlock(&g_mutex);
 		/********************** Critical Section **********************/
 
 		/*
@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 		exit(-1);
 	}
 
-	if (pthread_spin_init(&spin, PTHREAD_PROCESS_PRIVATE) != 0) {
+	if (pthread_spin_init(&spin, PTHREAD_PROCESS_SHARED) != 0) {
 		fprintf(stderr, "spin init error");
 		exit(-1);
 	}

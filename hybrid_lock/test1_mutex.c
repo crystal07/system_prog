@@ -17,10 +17,10 @@ void *thread_func(void *arg)
 	 * you implemented for assignment,
 	 * because g_count is shared by other threads.
 	 */
-	pthread_mutex_lock(&g_mutex);
+	//pthread_mutex_lock(&g_mutex);
 	for (i = 0; i<count; i++) {
 		pthread_mutex_lock(&mutex);
-		pthread_mutex_unlock(&g_mutex);
+		//pthread_mutex_unlock(&g_mutex);
 		/************ Critical Section ************/
 		g_count++;
 		/******************************************/

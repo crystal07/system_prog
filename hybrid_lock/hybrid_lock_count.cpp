@@ -11,7 +11,7 @@ int hybrid_lock_destroy(hybrid_lock* lock)
    return 0;
 }
 
-int hybrid_lock_lock(hybrid_lock* lock, long long int count)
+int hybrid_lock_lock(hybrid_lock* lock)
 {
    if (lock->lock_count > 2)
       lock->mtx_lock.lock();
