@@ -115,7 +115,7 @@ void get_message(int type, int que_id) {
 	int msg_size = sizeof(msg) - sizeof(msg.mtype);
 
 	int nbytes;
-	while(1) {
+
 	nbytes = msgrcv(que_id, &msg, msg_size, type, IPC_NOWAIT);
 	if (nbytes > 0) {
 		printf("[%d] %s\n", msg.sender, msg.mtext);
@@ -123,9 +123,8 @@ void get_message(int type, int que_id) {
 	else {
 		if (errno == ENOMSG) {
 			printf("empty queue\n");
-			break;
 		}
-	}}
+	}
 }
 
 void get_public_message(int type, int que_id) {

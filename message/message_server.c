@@ -14,7 +14,7 @@ typedef struct {
 	int sender;
 } MsgType;
 
-void send_message(MsgType msg, int que_id);
+void send_message(MsgType msg, int * que_id);
 
 int main() {
 	key_t key[3];
@@ -39,7 +39,7 @@ int main() {
 			}
 			else {
 				printf("message received from %d\n", received_msg.sender);
-				send_message(received_msg, que_id[i]);
+				send_message(received_msg, que_id);
 			}
 		}
 	}
@@ -47,17 +47,19 @@ int main() {
 	return 0;
 }
 
-void send_message(MsgType msg, int que_id) {
+void send_message(MsgType msg, int * que_id) {
 	MsgType sended_msg;
 	int msg_size = sizeof(sended_msg) - sizeof(sended_msg.mtype);
 
-	sended_msg.mtype = msg.receiver;
+	sended_msg.mtype = (long)msg.receiver;
 	strcpy(sended_msg.mtext, msg.mtext);
 	sended_msg.receiver = msg.receiver;
 	sended_msg.sender = msg.sender;
+
 	if (sended_msg.receiver > 0) {
-		msgsnd(que_id, &sended_msg, msg_size, IPC_NOWAIT);
-		printf("send message to %d\n", sended_msg.receiver);
+		int nbytes = msgsnd(que_id[sended_msg.mtype-1], &sended_msg, msg_size, IPC_NOWAIT);
+		if (nbytes >= 0) printf("send message to %d\n", sended_msg.receiver);
+		else fprintf(stderr, "message send error %d\n", errno);
 	}
 	else;
 }
