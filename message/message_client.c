@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
 
 typedef struct {
 	long mtype;
@@ -17,7 +18,7 @@ typedef struct {
 int shmid;
 key_t keyval;
 MsgType *shmsg;
-int shcnt;
+int shcnt = 0;
 void *shared_memory = (void *)0;
 char buffer[112640];
 
@@ -163,19 +164,20 @@ void get_public_message() {
 
 	int cnt_size = sizeof(shcnt);
 	int sender_size = sizeof(sender);
-	int msg_size = sizeof(mtext);
-	int total_size = sizeof(sender) + sizeof(mtext);
+	int msg_size = strlen(mtext) + 1;
+	int total_size = sizeof(sender) + strlen(mtext) + 1;
 
-	strncpy(buffer, shared_memory, 112640);
-	memcpy(cnt, buffer, cnt_size);
+	memcpy(&cnt, shared_memory, cnt_size);
+	memcpy(buffer, shared_memory, total_size*cnt+cnt_size);
+	//memcpy(&cnt, buffer, cnt_size);
 
-	if (cnt < shcnt)
+	if (cnt <= shcnt)
 	{
-		printf("empty message\n");
+		printf("no more message\n");
 		return;
 	}
 
-	memcpy(sender, buffer + cnt_size + total_size * shcnt, sender_size);
+	memcpy(&sender, buffer + cnt_size + total_size * shcnt, sender_size);
 	memcpy(mtext, buffer + cnt_size + total_size * shcnt + sender_size, msg_size);
 	shcnt += 1;
 
@@ -189,15 +191,16 @@ void all_public_message() {
 
 	int cnt_size = sizeof(cnt);
 	int sender_size = sizeof(sender);
-	int msg_size = sizeof(mtext);
-	int total_size = sizeof(sender) + sizeof(mtext);
+	int msg_size = strlen(mtext) + 1;
+	int total_size = sizeof(sender) + strlen(mtext) + 1;
 
-	strncpy(buffer, shared_memory, 112640);
-	memcpy(cnt, buffer, cnt_size);
+	memcpy(&cnt, shared_memory, cnt_size);
+	memcpy(buffer, shared_memory, total_size*cnt+cnt_size);
+	//memcpy(&cnt, buffer, cnt_size);
 
 	for (int i = 0; i < cnt; ++i)
 	{
-		memcpy(sender, buffer + cnt_size + total_size * i, sender_size);
+		memcpy(&sender, buffer + cnt_size + total_size * i, sender_size);
 		memcpy(mtext, buffer + cnt_size + total_size * i + sender_size, msg_size);
 
 		printf("[%d] %s\n", sender, mtext);

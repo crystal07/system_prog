@@ -23,6 +23,7 @@ void *shared_memory = (void *)0;
 char buffer[112640];
 
 void send_message(MsgType msg, int * que_id);
+void send_public_message(int sender, char mtext[1024]);
 
 int main() {
 	// shared
@@ -87,7 +88,7 @@ void send_message(MsgType msg, int * que_id) {
 
 	if (sended_msg.receiver > 0) {
 		int nbytes = msgsnd(que_id[sended_msg.mtype-1], &sended_msg, msg_size, IPC_NOWAIT);
-		if (nbytes >= 0) printf("send message to %d\n", sended_msg.receiver);
+		if (nbytes >= 0) printf("[%d] %s\n", sended_msg.sender, sended_msg.mtext);
 		else fprintf(stderr, "message send error %d\n", errno);
 	}
 	else;
@@ -96,28 +97,13 @@ void send_message(MsgType msg, int * que_id) {
 void send_public_message(int sender, char mtext[1024]) {
 	int cnt_size = sizeof(shcnt);
 	int sender_size = sizeof(sender);
-	int msg_size = sizeof(mtext);
-	int total_size = sizeof(sender) + sizeof(mtext);
+	int msg_size = strlen(mtext) + 1;
+	int total_size = sizeof(sender) + strlen(mtext) + 1;
 
-	printf("1\n");
-		printf("shcnt : %d\n", shcnt);
-			shcnt += 1;
-
-
+	shcnt += 1;
 	memcpy(buffer, &shcnt, cnt_size);
-	printf("shcnt : %d\n", shcnt);
-		printf("2\n");
-
 	memcpy(buffer + cnt_size + total_size * (shcnt-1), &sender, sender_size);
-		printf("3\n");
-
 	memcpy(buffer + cnt_size + total_size * (shcnt-1) + sender_size, mtext, msg_size);
-		printf("4\n");
-
-	memcpy(shared_memory, buffer, total_size * shcnt);
-		printf("5\n");
-
-
+	memcpy(shared_memory, buffer, total_size * shcnt + cnt_size);
 	printf("[%d] %s\n", sender, mtext);
-
 }
