@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/msg.h>
+#include <sys/shm.h>
 
 typedef struct {
 	long mtype;
@@ -14,9 +15,32 @@ typedef struct {
 	int sender;
 } MsgType;
 
+int shmid;
+key_t keyval;
+MsgType *shmsg;
+int shcnt = 0;
+void *shared_memory = (void *)0;
+char buffer[112640];
+
 void send_message(MsgType msg, int * que_id);
 
 int main() {
+	// shared
+	keyval = 1234;
+	shmid = shmget(keyval, (key_t)1024, IPC_CREAT | 0666);
+	if (shmid == -1)
+	{
+		return -1;
+	}
+
+	shared_memory = shmat(shmid, (void *)0, 0);
+	if (shared_memory == (void *)-1)
+	{
+		perror("shmat failed : ");
+		exit(0);
+	}
+
+	//queue
 	key_t key[3];
 	int que_id[3];
 
@@ -34,8 +58,11 @@ int main() {
 		for (int i = 0; i < 3; i++) { //client message
 			nbytes = msgrcv(que_id[i], &received_msg, msg_size, 10, IPC_NOWAIT);
 			if (nbytes <= 0) {
-				//not message in queue
-				//printf("no message\n");
+				nbytes = msgrcv(que_id[i], &received_msg, msg_size, 20, IPC_NOWAIT);
+				if (nbytes > 0) {
+					printf("public message received from %d\n", received_msg.sender);
+					send_public_message(received_msg.sender, received_msg.mtext);
+				}
 			}
 			else {
 				printf("message received from %d\n", received_msg.sender);
@@ -43,6 +70,8 @@ int main() {
 			}
 		}
 	}
+
+	shmdt(shared_memory);
 
 	return 0;
 }
@@ -62,4 +91,33 @@ void send_message(MsgType msg, int * que_id) {
 		else fprintf(stderr, "message send error %d\n", errno);
 	}
 	else;
+}
+
+void send_public_message(int sender, char mtext[1024]) {
+	int cnt_size = sizeof(shcnt);
+	int sender_size = sizeof(sender);
+	int msg_size = sizeof(mtext);
+	int total_size = sizeof(sender) + sizeof(mtext);
+
+	printf("1\n");
+		printf("shcnt : %d\n", shcnt);
+			shcnt += 1;
+
+
+	memcpy(buffer, &shcnt, cnt_size);
+	printf("shcnt : %d\n", shcnt);
+		printf("2\n");
+
+	memcpy(buffer + cnt_size + total_size * (shcnt-1), &sender, sender_size);
+		printf("3\n");
+
+	memcpy(buffer + cnt_size + total_size * (shcnt-1) + sender_size, mtext, msg_size);
+		printf("4\n");
+
+	memcpy(shared_memory, buffer, total_size * shcnt);
+		printf("5\n");
+
+
+	printf("[%d] %s\n", sender, mtext);
+
 }
