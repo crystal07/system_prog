@@ -20,7 +20,6 @@ key_t keyval;
 MsgType *shmsg;
 int shcnt = 0;
 void *shared_memory = (void *)0;
-char buffer[112640];
 
 int choice();
 void send_message(int que_id);
@@ -168,8 +167,6 @@ void get_public_message() {
 	int total_size = sizeof(sender) + strlen(mtext) + 1;
 
 	memcpy(&cnt, shared_memory, cnt_size);
-	memcpy(buffer, shared_memory, total_size*cnt+cnt_size);
-	//memcpy(&cnt, buffer, cnt_size);
 
 	if (cnt <= shcnt)
 	{
@@ -177,8 +174,8 @@ void get_public_message() {
 		return;
 	}
 
-	memcpy(&sender, buffer + cnt_size + total_size * shcnt, sender_size);
-	memcpy(mtext, buffer + cnt_size + total_size * shcnt + sender_size, msg_size);
+	memcpy(&sender, shared_memory + cnt_size + total_size * shcnt, sender_size);
+	memcpy(mtext, shared_memory + cnt_size + total_size * shcnt + sender_size, msg_size);
 	shcnt += 1;
 
 	printf("[%d] %s\n", sender, mtext);
@@ -195,13 +192,11 @@ void all_public_message() {
 	int total_size = sizeof(sender) + strlen(mtext) + 1;
 
 	memcpy(&cnt, shared_memory, cnt_size);
-	memcpy(buffer, shared_memory, total_size*cnt+cnt_size);
-	//memcpy(&cnt, buffer, cnt_size);
 
 	for (int i = 0; i < cnt; ++i)
 	{
-		memcpy(&sender, buffer + cnt_size + total_size * i, sender_size);
-		memcpy(mtext, buffer + cnt_size + total_size * i + sender_size, msg_size);
+		memcpy(&sender, shared_memory + cnt_size + total_size * i, sender_size);
+		memcpy(mtext, shared_memory + cnt_size + total_size * i + sender_size, msg_size);
 
 		printf("[%d] %s\n", sender, mtext);
 	}

@@ -20,7 +20,6 @@ key_t keyval;
 MsgType *shmsg;
 int shcnt = 0;
 void *shared_memory = (void *)0;
-char buffer[112640];
 
 void send_message(MsgType msg, int * que_id);
 void send_public_message(int sender, char mtext[1024]);
@@ -101,9 +100,8 @@ void send_public_message(int sender, char mtext[1024]) {
 	int total_size = sizeof(sender) + strlen(mtext) + 1;
 
 	shcnt += 1;
-	memcpy(buffer, &shcnt, cnt_size);
-	memcpy(buffer + cnt_size + total_size * (shcnt-1), &sender, sender_size);
-	memcpy(buffer + cnt_size + total_size * (shcnt-1) + sender_size, mtext, msg_size);
-	memcpy(shared_memory, buffer, total_size * shcnt + cnt_size);
+	memcpy(shared_memory, &shcnt, cnt_size);
+	memcpy(shared_memory + cnt_size + total_size * (shcnt-1), &sender, sender_size);
+	memcpy(shared_memory + cnt_size + total_size * (shcnt-1) + sender_size, mtext, msg_size);
 	printf("[%d] %s\n", sender, mtext);
 }
