@@ -27,9 +27,10 @@ void send_public_message(int sender, char mtext[1024]);
 int main() {
 	// shared
 	keyval = 1234;
-	shmid = shmget(keyval, (key_t)1024, IPC_CREAT | 0666);
+	shmid = shmget(keyval, sizeof(int)+(sizeof(int)+1024)*100, IPC_CREAT | 0666);
 	if (shmid == -1)
 	{
+		perror("shmget failed : ");
 		return -1;
 	}
 
@@ -96,8 +97,8 @@ void send_message(MsgType msg, int * que_id) {
 void send_public_message(int sender, char mtext[1024]) {
 	int cnt_size = sizeof(shcnt);
 	int sender_size = sizeof(sender);
-	int msg_size = strlen(mtext) + 1;
-	int total_size = sizeof(sender) + strlen(mtext) + 1;
+	int msg_size = 1024;
+	int total_size = sizeof(sender) + 1024;
 
 	shcnt += 1;
 	memcpy(shared_memory, &shcnt, cnt_size);

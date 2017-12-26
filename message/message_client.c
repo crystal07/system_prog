@@ -45,9 +45,10 @@ int main() {
 
 	// shared
 	keyval = 1234;
-	shmid = shmget(keyval, (key_t)1024, IPC_CREAT | 0666);
+	shmid = shmget(keyval, sizeof(int)+(sizeof(int)+1024)*100, IPC_CREAT | 0666);
 	if (shmid == -1)
 	{
+		perror("shmget failed : ");
 		return -1;
 	}
 
@@ -163,8 +164,8 @@ void get_public_message() {
 
 	int cnt_size = sizeof(shcnt);
 	int sender_size = sizeof(sender);
-	int msg_size = strlen(mtext) + 1;
-	int total_size = sizeof(sender) + strlen(mtext) + 1;
+	int msg_size = 1024;
+	int total_size = sizeof(sender) + 1024;
 
 	memcpy(&cnt, shared_memory, cnt_size);
 
@@ -182,19 +183,21 @@ void get_public_message() {
 }
 
 void all_public_message() {
-	int cnt = 0;
-	int sender;
-	char mtext[1024];
+	int cnt = 0;	
 
 	int cnt_size = sizeof(cnt);
-	int sender_size = sizeof(sender);
-	int msg_size = strlen(mtext) + 1;
-	int total_size = sizeof(sender) + strlen(mtext) + 1;
+	int sender_size = sizeof(int);
+	int msg_size = 1024;
+	int total_size = sizeof(int) + 1024;
+	int sender;
 
 	memcpy(&cnt, shared_memory, cnt_size);
 
 	for (int i = 0; i < cnt; ++i)
 	{
+		int sender;
+		char mtext[1024];
+
 		memcpy(&sender, shared_memory + cnt_size + total_size * i, sender_size);
 		memcpy(mtext, shared_memory + cnt_size + total_size * i + sender_size, msg_size);
 
